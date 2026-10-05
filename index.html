@@ -15,7 +15,6 @@
         .cursor-pointer { cursor: pointer; }
         .auth-card { max-width: 460px; border-radius: 14px; }
         .switcher-bar { background-color: #111827; color: #9ca3af; padding: 7px 0; font-size: 0.85rem; }
-        .status-badge { font-size: 0.8rem; padding: 0.35em 0.65em; border-radius: 20px; }
     </style>
 </head>
 <body class="d-flex flex-column min-vh-100">
@@ -81,45 +80,14 @@
         </div>
     </footer>
 
-    <!-- MODAL ADMIN CHỈNH SỬA TRẠNG THÁI ĐƠN HÀNG CHI TIẾT -->
-    <div class="modal fade" id="orderStatusModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header bg-dark text-white">
-                    <h5 class="modal-title fw-bold"><i class="bi bi-pencil-square me-2 text-warning"></i>Cập nhật đơn hàng #<span id="modalOrderIdDisplay"></span></h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div id="modalOrderDetails" class="bg-light p-3 rounded mb-3 small"></div>
-                    <form id="orderStatusForm" onsubmit="handleStatusFormSubmit(event)">
-                        <input type="hidden" id="modalOrderIdInput">
-                        <div class="mb-3">
-                            <label class="form-label fw-bold small">Chọn trạng thái đơn hàng mới:</label>
-                            <select id="modalStatusSelect" class="form-select">
-                                <option value="Chờ xác nhận">Chờ xác nhận</option>
-                                <option value="Đã xác nhận">Đã xác nhận</option>
-                                <option value="Đang chuẩn bị">Đang chuẩn bị</option>
-                                <option value="Đang giao">Đang giao</option>
-                                <option value="Đã giao">Đã giao</option>
-                                <option value="Đã hủy">Đã hủy</option>
-                            </select>
-                        </div>
-                        <div class="d-flex justify-content-end gap-2">
-                            <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Đóng</button>
-                            <button type="submit" class="btn btn-primary btn-sm fw-bold"><i class="bi bi-check2-circle me-1"></i>Lưu trạng thái</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Bootstrap 5 JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
+        // HÀM TỰ ĐỘNG DÒ TÌM ĐƯỜNG DẪN ẢNH VÀ FALLBACK
         function handleImgError(img, origFilename, prodId, prodName) {
             const step = parseInt(img.dataset.retryStep || "0");
+            
             if (step === 0) {
                 img.dataset.retryStep = "1";
                 img.src = "images/" + origFilename;
@@ -135,6 +103,7 @@
                 img.src = "./" + origFilename;
                 return;
             }
+
             img.onerror = null;
             const bgColors = ['1e293b', '0f172a', '334155', '1e1b4b', '172554', '14532d', '701a75', '4c0519'];
             const chosenBg = bgColors[prodId % bgColors.length];
@@ -147,18 +116,485 @@
             { id: 2, fullname: 'Nguyễn Văn An', email: 'customer@gmail.com', phone: '0912345678', password: '123456', role: 'customer' }
         ];
 
+        // DANH SÁCH SẢN PHẨM KHỚP 100% CÁC ẢNH THỰC TẾ
         const INITIAL_PRODUCTS = [
-            { id: 1, name: 'Gọng Kính Vuông Bo Góc Xám Khói Trong Suốt', sku: 'GLR-525849', category: 'Kính cận', brand: 'GLORISS', price: 850000, sale_price: 650000, stock: 22, gender: 'Unisex', shape: 'Vuông', material: 'Nhựa Acetate xám khói trong', image: '525849748_1055378003459016_6785356181979024907_n.jpg', description: 'Gọng kính vuông bo tròn nhẹ, tông xám khói trong suốt hiện đại và sáng da.' },
-            { id: 2, name: 'Gọng Kính Vuông Acetate Nâu Trà Hổ Phách 51-21-150', sku: 'GLR-532477', category: 'Kính cận', brand: 'GLORISS', price: 890000, sale_price: 680000, stock: 16, gender: 'Unisex', shape: 'Vuông', material: 'Nhựa Acetate nâu hổ phách', image: '532477319_1067463415583808_399643584112242461_n.jpg', description: 'Tông nâu trà amber ấm áp, lộ lõi kim loại càng kính bền bỉ, thông số 51-21-150 C7.' },
-            { id: 3, name: 'Gọng Kính Nửa Viền Browline Xám Khói Kim Loại', sku: 'GLR-542743', category: 'Kính cận', brand: 'GLORISS', price: 950000, sale_price: 750000, stock: 18, gender: 'Unisex', shape: 'Vuông', material: 'Acetate phối kim loại bạc', image: '542743950_1082534927409990_4171261760020351940_n.jpg', description: 'Dáng clubmaster với viền trên nhựa trong xám khói kết hợp viền kim loại dưới thanh thoát.' },
-            { id: 4, name: 'Gọng Kính Nửa Viền Đen Bạc Chạm Khắc Điêu Khắc Tinh Xảo', sku: 'GLR-558145', category: 'Kính cận', brand: 'GLORISS', price: 1100000, sale_price: 850000, stock: 15, gender: 'Unisex', shape: 'Vuông', material: 'Hợp kim mạ bạc phối Acetate đen', image: '558145006_1105380665125416_8522189778794243701_n.jpg', description: 'Khớp nối và càng kính chạm trổ hoa văn cổ điển sang trọng, lịch lãm.' },
-            { id: 5, name: 'Gọng Kính Mắt Mèo Nữ Quyến Rũ Càng Kim Loại Thanh Mảnh', sku: 'GLR-570522', category: 'Kính thời trang', brand: 'GLORISS', price: 890000, sale_price: 690000, stock: 14, gender: 'Nữ', shape: 'Mắt mèo', material: 'Acetate viền mỏng phối hợp kim', image: '570522318_1128217032841779_6725996021749038252_n.jpg', description: 'Dáng mắt mèo vát xếch tạo điểm nhấn sắc sảo, tôn đường nét khuôn mặt phái đẹp.' }
+            {
+                id: 1,
+                name: 'Gọng Kính Vuông Bo Góc Xám Khói Trong Suốt',
+                sku: 'GLR-525849',
+                category: 'Kính cận',
+                brand: 'GLORISS',
+                price: 850000,
+                sale_price: 650000,
+                stock: 22,
+                gender: 'Unisex',
+                shape: 'Vuông',
+                material: 'Nhựa Acetate xám khói trong',
+                image: '525849748_1055378003459016_6785356181979024907_n.jpg',
+                description: 'Gọng kính vuông bo tròn nhẹ, tông xám khói trong suốt hiện đại và sáng da.'
+            },
+            {
+                id: 2,
+                name: 'Gọng Kính Vuông Acetate Nâu Trà Hổ Phách 51-21-150',
+                sku: 'GLR-532477',
+                category: 'Kính cận',
+                brand: 'GLORISS',
+                price: 890000,
+                sale_price: 680000,
+                stock: 16,
+                gender: 'Unisex',
+                shape: 'Vuông',
+                material: 'Nhựa Acetate nâu hổ phách',
+                image: '532477319_1067463415583808_399643584112242461_n.jpg',
+                description: 'Tông nâu trà amber ấm áp, lộ lõi kim loại càng kính bền bỉ, thông số 51-21-150 C7.'
+            },
+            {
+                id: 3,
+                name: 'Gọng Kính Nửa Viền Browline Xám Khói Kim Loại',
+                sku: 'GLR-542743',
+                category: 'Kính cận',
+                brand: 'GLORISS',
+                price: 950000,
+                sale_price: 750000,
+                stock: 18,
+                gender: 'Unisex',
+                shape: 'Vuông',
+                material: 'Acetate phối kim loại bạc',
+                image: '542743950_1082534927409990_4171261760020351940_n.jpg',
+                description: 'Dáng clubmaster với viền trên nhựa trong xám khói kết hợp viền kim loại dưới thanh thoát.'
+            },
+            {
+                id: 4,
+                name: 'Gọng Kính Nửa Viền Đen Bạc Chạm Khắc Điêu Khắc Tinh Xảo',
+                sku: 'GLR-558145',
+                category: 'Kính cận',
+                brand: 'GLORISS',
+                price: 1100000,
+                sale_price: 850000,
+                stock: 15,
+                gender: 'Unisex',
+                shape: 'Vuông',
+                material: 'Hợp kim mạ bạc phối Acetate đen',
+                image: '558145006_1105380665125416_8522189778794243701_n.jpg',
+                description: 'Khớp nối và càng kính chạm trổ hoa văn cổ điển sang trọng, lịch lãm.'
+            },
+            {
+                id: 5,
+                name: 'Gọng Kính Mắt Mèo Nữ Quyến Rũ Càng Kim Loại Thanh Mảnh',
+                sku: 'GLR-570522',
+                category: 'Kính thời trang',
+                brand: 'GLORISS',
+                price: 890000,
+                sale_price: 690000,
+                stock: 14,
+                gender: 'Nữ',
+                shape: 'Mắt mèo',
+                material: 'Acetate viền mỏng phối hợp kim',
+                image: '570522318_1128217032841779_6725996021749038252_n.jpg',
+                description: 'Dáng mắt mèo vát xếch tạo điểm nhấn sắc sảo, tôn đường nét khuôn mặt phái đẹp.'
+            },
+            {
+                id: 6,
+                name: 'Gọng Kính Tròn Đa Giác Kim Loại Đen Mờ Phối Cầu Đồng',
+                sku: 'GLR-583296',
+                category: 'Kính cận',
+                brand: 'GLORISS',
+                price: 920000,
+                sale_price: 720000,
+                stock: 18,
+                gender: 'Unisex',
+                shape: 'Tròn',
+                material: 'Titan / Hợp kim sơn tĩnh điện',
+                image: '583296869_1148517517478397_352946444039422875_n.jpg',
+                description: 'Khung kim loại thanh mảnh hoàn thiện đen nhám, cầu kính màu đồng retro.'
+            },
+            {
+                id: 7,
+                name: 'Gọng Kính Nửa Viền LY2356 C4 Xanh Rêu Trầm 49-24-145',
+                sku: 'GLR-LY2356',
+                category: 'Kính cận',
+                brand: 'GLORISS',
+                price: 980000,
+                sale_price: 760000,
+                stock: 20,
+                gender: 'Unisex',
+                shape: 'Vuông',
+                material: 'Acetate rêu khói phối kim loại',
+                image: '599945129_1166706388992843_7060442165624612292_n.jpg',
+                description: 'Mẫu kính LY2356 màu C4 thanh lịch, kích thước 49-24-145 phong cách trí thức.'
+            },
+            {
+                id: 8,
+                name: 'Gọng Kính Titanium Vuông Bo Góc Đen Bóng Cao Cấp',
+                sku: 'GLR-605534',
+                category: 'Kính cận',
+                brand: 'GLORISS',
+                price: 1250000,
+                sale_price: 950000,
+                stock: 25,
+                gender: 'Unisex',
+                shape: 'Vuông',
+                material: 'Titanium siêu nhẹ chống gỉ',
+                image: '605534053_1176777201319095_4701404897652910712_n.jpg',
+                description: 'Gọng Titanium siêu bền, trọng lượng nhẹ ôm khít khuôn mặt, chống chịu lực vượt trội.'
+            },
+            {
+                id: 9,
+                name: 'Kính Mát Kim Loại Vuông Vát Góc Tròng Nâu Trà Cổ Điển',
+                sku: 'GLR-616134',
+                category: 'Kính râm',
+                brand: 'GLORISS',
+                price: 1150000,
+                sale_price: 880000,
+                stock: 12,
+                gender: 'Unisex',
+                shape: 'Vuông',
+                material: 'Khung hợp kim sáng phối tròng UV400',
+                image: '616134920_1187056246957857_4622861026029269177_n.jpg',
+                description: 'Form mắt vuông vát góc kim loại bạc mảnh mai, tròng nâu ấm áp chống chói khi đi nắng.'
+            },
+            {
+                id: 10,
+                name: 'Kính Râm Acetate Bản Dày Đinh Tán Kim Loại Mũi Tên Đen',
+                sku: 'GLR-627186',
+                category: 'Kính râm',
+                brand: 'GLORISS',
+                price: 1350000,
+                sale_price: 1050000,
+                stock: 10,
+                gender: 'Unisex',
+                shape: 'Vuông',
+                material: 'Acetate đen bóng cao cấp',
+                image: '627186451_1203829001947248_6982740213305301561_n.jpg',
+                description: 'Dáng kính râm đen đậm dày dặn, khớp càng kính đính chi tiết kim loại góc cạnh mạnh mẽ.'
+            },
+            {
+                id: 11,
+                name: 'Gọng Kính K9147 C17 Vuông Xanh Rêu Trong Suốt 52-22-150',
+                sku: 'GLR-K9147',
+                category: 'Kính cận',
+                brand: 'GLORISS',
+                price: 890000,
+                sale_price: 690000,
+                stock: 18,
+                gender: 'Unisex',
+                shape: 'Vuông',
+                material: 'Acetate trong suốt lộ cốt khía rãnh',
+                image: '644833751_1226691152994366_657526534521975656_n.jpg',
+                description: 'Mẫu K9147 màu C17 tông rêu khói lộ cốt kim loại tinh xảo ở càng kính.'
+            },
+            {
+                id: 12,
+                name: 'Gọng Kính KBT98301 C4 Nâu Trà Kèm Đệm Mũi Rời 49-22-150',
+                sku: 'GLR-KBT98301',
+                category: 'Kính cận',
+                brand: 'GLORISS',
+                price: 920000,
+                sale_price: 720000,
+                stock: 20,
+                gender: 'Unisex',
+                shape: 'Vuông',
+                material: 'Acetate cao cấp phối đệm mũi kim loại',
+                image: '670916402_1260512239612257_3402860768403219051_n.jpg',
+                description: 'Mẫu KBT98301 màu C4 nâu trà thanh nhã, trang bị đệm mũi rời giúp chống trượt khi đeo.'
+            },
+            {
+                id: 13,
+                name: 'Gọng Kính Vuông Đen Bóng Cổ Điển Tinh Giản Khóe Mắt Đinh Tán',
+                sku: 'GLR-703136',
+                category: 'Kính cận',
+                brand: 'GLORISS',
+                price: 790000,
+                sale_price: 590000,
+                stock: 25,
+                gender: 'Unisex',
+                shape: 'Vuông',
+                material: 'Acetate đen bóng',
+                image: '703136423_1289247956738685_1143325246230384269_n.jpg',
+                description: 'Gọng kính vuông cơ bản dễ đeo, chất nhựa bóng bẩy kết hợp chốt kim loại tinh tế.'
+            },
+            {
+                id: 14,
+                name: 'Gọng Kính Vuông Bo Tròn Nhẹ Màu Xanh Trà Trong Suốt',
+                sku: 'GLR-703924',
+                category: 'Kính cận',
+                brand: 'GLORISS',
+                price: 850000,
+                sale_price: 650000,
+                stock: 16,
+                gender: 'Unisex',
+                shape: 'Vuông',
+                material: 'Acetate trong suốt',
+                image: '703924479_1289248243405323_5586697157412411796_n.jpg',
+                description: 'Khung vuông vát nhẹ góc, tông màu rêu trà trong suốt mang lại cảm giác nhẹ nhàng, trí thức.'
+            },
+            {
+                id: 15,
+                name: 'Kính Râm Oval Xám Trong Suốt Họa Tiết 4 Chỉ Trắng',
+                sku: 'GLR-710573',
+                category: 'Kính râm',
+                brand: 'GLORISS',
+                price: 1450000,
+                sale_price: 1150000,
+                stock: 10,
+                gender: 'Unisex',
+                shape: 'Tròn',
+                material: 'Acetate xám trong suốt',
+                image: '710573074_1299164252413722_8416920444502907846_n.jpg',
+                description: 'Phong cách thời trang avant-garde với dáng oval hẹp, điểm nhấn 4 vạch chéo cá tính trên càng kính.'
+            },
+            {
+                id: 16,
+                name: 'Gọng Kính Tròn Boston Nâu Hổ Phách Càng Họa Tiết Gỗ',
+                sku: 'GLR-724195',
+                category: 'Kính cận',
+                brand: 'GLORISS',
+                price: 890000,
+                sale_price: 690000,
+                stock: 15,
+                gender: 'Unisex',
+                shape: 'Tròn',
+                material: 'Acetate nâu hổ phách phối càng vân gỗ',
+                image: '724195339_1310603904603090_2550477616759459595_n.jpg',
+                description: 'Viền kính bo tròn tông màu hổ phách ấm áp kết hợp càng kính vân gỗ vintage mộc mạc.'
+            },
+            {
+                id: 17,
+                name: 'Gọng Kính Tròn Boston Xám Rêu Khói Càng Vân Gỗ Đen',
+                sku: 'GLR-724265',
+                category: 'Kính cận',
+                brand: 'GLORISS',
+                price: 890000,
+                sale_price: 690000,
+                stock: 15,
+                gender: 'Unisex',
+                shape: 'Tròn',
+                material: 'Acetate xám rêu khói phối càng gỗ mun',
+                image: '724265430_1310603901269757_1271966434669066655_n.jpg',
+                description: 'Sự kết hợp giữa viền nhựa màu rêu khói trong suốt và càng kính vân gỗ đen lịch lãm.'
+            },
+            {
+                id: 18,
+                name: 'Gọng Kính Vuông Đen Bản Dày Cổ Điển Khóe Đinh Tán Đôi',
+                sku: 'GLR-729219',
+                category: 'Kính cận',
+                brand: 'GLORISS',
+                price: 850000,
+                sale_price: 650000,
+                stock: 20,
+                gender: 'Unisex',
+                shape: 'Vuông',
+                material: 'Acetate đen bóng',
+                image: '729219628_1320686296928184_7158751012489128399_n.jpg',
+                description: 'Thiết kế viền vuông to bản cá tính, điểm chốt đinh tán đôi ở khóe kính tạo nét ấn tượng.'
+            },
+            {
+                id: 19,
+                name: 'Gọng Kính Tròn Boston Xanh Rêu Cầu Kim Loại Thanh Thoát',
+                sku: 'GLR-750355',
+                category: 'Kính cận',
+                brand: 'GLORISS',
+                price: 920000,
+                sale_price: 720000,
+                stock: 15,
+                gender: 'Unisex',
+                shape: 'Tròn',
+                material: 'Acetate xanh rêu phối cầu hợp kim',
+                image: '750355674_1338270891836391_3552668677856461482_n.jpg',
+                description: 'Khung viền tròn bo màu xanh rêu trong suốt kết hợp cầu nối kim loại mảnh nhẹ, đệm mũi linh hoạt.'
+            },
+            {
+                id: 20,
+                name: 'Kính Râm Polarized Xám Khói Trong Bản Vuông Góc Cạnh',
+                sku: 'GLR-759299',
+                category: 'Kính râm',
+                brand: 'GLORISS',
+                price: 1250000,
+                sale_price: 950000,
+                stock: 14,
+                gender: 'Unisex',
+                shape: 'Vuông',
+                material: 'Acetate xám trong (Crystal Grey)',
+                image: '759299636_1352447557085391_2432466037728208150_n.jpg',
+                description: 'Khung nhựa xám khói hiện đại, lộ cốt kim loại tinh xảo ở càng kính phối tròng chống UV400.'
+            },
+            {
+                id: 21,
+                name: 'Kính Râm Vuông Đen Bản Dày Phối Tròng Đen Đậm Chống Chói',
+                sku: 'GLR-762737',
+                category: 'Kính râm',
+                brand: 'GLORISS',
+                price: 1250000,
+                sale_price: 950000,
+                stock: 18,
+                gender: 'Unisex',
+                shape: 'Vuông',
+                material: 'Acetate cao cấp đen bóng',
+                image: '762737488_1352447820418698_6228967226641414234_n.jpg',
+                description: 'Form vuông to bản mạnh mẽ, mắt kính phân cực giảm chói lóa tối ưu khi lái xe dưới trời nắng.'
+            },
+            {
+                id: 22,
+                name: 'Kính Râm Dáng Vuông Vát Nhẹ Xám Khói Trong Suốt',
+                sku: 'GLR-762831',
+                category: 'Kính râm',
+                brand: 'GLORISS',
+                price: 1250000,
+                sale_price: 950000,
+                stock: 16,
+                gender: 'Unisex',
+                shape: 'Vuông',
+                material: 'Acetate xám trong suốt',
+                image: '762831273_1352447540418726_7607216540267278281_n.jpg',
+                description: 'Gọng xám trong suốt thanh lịch, form kính vuông vắn sắc nét, tròng râm bảo vệ mắt hoàn hảo.'
+            },
+            {
+                id: 23,
+                name: 'Kính Râm Vuông Vát Góc Nhựa Xanh Rêu Khói Trong Suốt',
+                sku: 'GLR-762868',
+                category: 'Kính râm',
+                brand: 'GLORISS',
+                price: 1250000,
+                sale_price: 950000,
+                stock: 12,
+                gender: 'Unisex',
+                shape: 'Vuông',
+                material: 'Acetate rêu khói trong suốt',
+                image: '762868452_1352447787085368_8272071967529265599_n.jpg',
+                description: 'Sắc xanh rêu khói thời thượng, gọng kính dày dặn chắc chắn cùng tròng kính tối màu chống tia UV.'
+            },
+            {
+                id: 24,
+                name: 'Gọng Kính Titan Vuông Cầu Đôi Bạc Xám Mờ Siêu Nhẹ',
+                sku: 'GLR-772510',
+                category: 'Kính cận',
+                brand: 'GLORISS',
+                price: 1350000,
+                sale_price: 1050000,
+                stock: 15,
+                gender: 'Unisex',
+                shape: 'Phi công',
+                material: 'Titanium nguyên chất mạ xám mờ',
+                image: '772510820_1362762376053909_5767418507290829153_n.jpg',
+                description: 'Thiết kế cầu đôi hiện đại, chất liệu Titanium siêu nhẹ không gây hằn sống mũi hay dị ứng da.'
+            },
+            {
+                id: 25,
+                name: 'Gọng Kính Nửa Viền 20505 Xám Khói Trong Suốt 53-18-148',
+                sku: 'GLR-794394',
+                category: 'Kính cận',
+                brand: 'GLORISS',
+                price: 980000,
+                sale_price: 760000,
+                stock: 22,
+                gender: 'Unisex',
+                shape: 'Vuông',
+                material: 'Acetate xám trong phối kim loại bạc',
+                image: '794394853_1398320849164728_2387411871696708915_n.jpg',
+                description: 'Model 20505 dáng nửa viền thanh lịch phối giữa tông xám khói trong suốt và khung kim loại bạc.'
+            },
+            {
+                id: 26,
+                name: 'Gọng Kính Nửa Viền 20505 Đen Toàn Phần Lịch Lãm 53-18-148',
+                sku: 'GLR-795643',
+                category: 'Kính cận',
+                brand: 'GLORISS',
+                price: 980000,
+                sale_price: 760000,
+                stock: 20,
+                gender: 'Nam',
+                shape: 'Vuông',
+                material: 'Acetate đen phối kim loại đen',
+                image: '795643990_1398320765831403_3288893341388816612_n.jpg',
+                description: 'Model 20505 phối màu full black chững chạc, phù hợp quý ông công sở và văn phòng.'
+            },
+            {
+                id: 27,
+                name: 'Kính Râm Gọng Đen Bản Dày Tròng Vàng Hổ Phách Càng Ngôi Sao',
+                sku: 'GLR-796584',
+                category: 'Kính râm',
+                brand: 'GLORISS',
+                price: 1350000,
+                sale_price: 1050000,
+                stock: 12,
+                gender: 'Unisex',
+                shape: 'Vuông',
+                material: 'Acetate đen bóng phối đinh tán sao',
+                image: '796584961_1385467357116744_5832212391803403730_n.jpg',
+                description: 'Dáng mắt vuông vát góc, càng kính đính ngôi sao kim loại nổi bật phối cùng tròng vàng hổ phách dịu mắt.'
+            },
+            {
+                id: 28,
+                name: 'Kính Râm Gọng Đen Phối Tròng Gradient Cam Đào Trẻ Trung',
+                sku: 'GLR-796746',
+                category: 'Kính râm',
+                brand: 'GLORISS',
+                price: 1350000,
+                sale_price: 1050000,
+                stock: 14,
+                gender: 'Unisex',
+                shape: 'Vuông',
+                material: 'Acetate đen bóng cao cấp',
+                image: '796746885_1385467347116745_316312356467901797_n.jpg',
+                description: 'Tròng kính màu cam gradient sành điệu, kết hợp gọng đen bóng thời thượng và bắt mắt.'
+            },
+            {
+                id: 29,
+                name: 'Kính Râm Xám Khói Trong Suốt Càng Đính Ngôi Sao Kim Loại',
+                sku: 'GLR-796866',
+                category: 'Kính râm',
+                brand: 'GLORISS',
+                price: 1350000,
+                sale_price: 1050000,
+                stock: 15,
+                gender: 'Unisex',
+                shape: 'Vuông',
+                material: 'Acetate xám trong (Crystal Grey)',
+                image: '796866880_1385467350450078_5060038200924945573_n.jpg',
+                description: 'Gọng nhựa trong suốt tông xám khói, tròng râm đen đậm tạo cảm giác phóng khoáng, hiện đại.'
+            },
+            {
+                id: 30,
+                name: 'Kính Râm Form Vuông Đen Bóng Phối Tròng Đen Đậm Chống UV',
+                sku: 'GLR-797841',
+                category: 'Kính râm',
+                brand: 'GLORISS',
+                price: 1350000,
+                sale_price: 1050000,
+                stock: 16,
+                gender: 'Unisex',
+                shape: 'Vuông',
+                material: 'Acetate cao cấp đen bóng',
+                image: '797841455_1385467337116746_1272003281430880047_n.jpg',
+                description: 'Dáng kính râm đen cổ điển không bao giờ lỗi thời, càng kính đính họa tiết kim loại ánh bạc sắc sảo.'
+            },
+            {
+                id: 31,
+                name: 'Gọng Kính Nửa Viền 20505 Đen Phối Kim Loại Rose Gold 53-18-148',
+                sku: 'GLR-800924',
+                category: 'Kính cận',
+                brand: 'GLORISS',
+                price: 1050000,
+                sale_price: 820000,
+                stock: 18,
+                gender: 'Unisex',
+                shape: 'Vuông',
+                material: 'Acetate đen phối kim loại vàng hồng',
+                image: '800924839_1398320762498070_3731222333175860759_n.jpg',
+                description: 'Model 20505 nổi bật với sự phối hợp giữa viền nhựa đen bóng và khung kim loại vàng hồng sang trọng.'
+            }
         ];
+
+        // ĐỒNG BỘ LOCALSTORAGE MỚI ĐỂ ĐẢM BẢO TẢI ĐÚNG DỮ LIỆU
+        localStorage.removeItem('optilux_products');
+        localStorage.removeItem('optilux_products_v2');
+        localStorage.removeItem('optilux_products_v3');
+        localStorage.setItem('optilux_products_v4', JSON.stringify(INITIAL_PRODUCTS));
 
         let state = {
             currentUser: JSON.parse(localStorage.getItem('optilux_currentUser')) || null,
             users: JSON.parse(localStorage.getItem('optilux_users')) || INITIAL_USERS,
-            products: JSON.parse(localStorage.getItem('optilux_products_v4')) || INITIAL_PRODUCTS,
+            products: INITIAL_PRODUCTS,
             cart: JSON.parse(localStorage.getItem('optilux_cart')) || [],
             orders: JSON.parse(localStorage.getItem('optilux_orders')) || [
                 {
@@ -170,18 +606,7 @@
                     total: 820000,
                     status: 'Đang giao',
                     createdAt: '05/10/2026 14:30',
-                    items: [{ name: 'Gọng Kính Nửa Viền Browline Xám Khói Kim Loại', qty: 1, price: 820000 }]
-                },
-                {
-                    id: 102,
-                    customer: 'Lê Hoàng Nam',
-                    email: 'hoangnam@gmail.com',
-                    phone: '0987654321',
-                    address: '25 Lê Duẩn, Ba Đình, Hà Nội',
-                    total: 650000,
-                    status: 'Chờ xác nhận',
-                    createdAt: '05/10/2026 16:15',
-                    items: [{ name: 'Gọng Kính Vuông Bo Góc Xám Khói Trong Suốt', qty: 1, price: 650000 }]
+                    items: [{ name: 'Gọng Kính Nửa Viền 20505 Đen Phối Kim Loại Rose Gold', qty: 1, price: 820000 }]
                 }
             ],
             currentPage: 'home',
@@ -220,75 +645,6 @@
 
         function formatMoney(num) {
             return new Intl.NumberFormat('vi-VN').format(num) + 'đ';
-        }
-
-        function getStatusBadgeClass(status) {
-            switch(status) {
-                case 'Chờ xác nhận': return 'bg-warning text-dark';
-                case 'Đã xác nhận': return 'bg-primary text-white';
-                case 'Đang chuẩn bị': return 'bg-info text-dark';
-                case 'Đang giao': return 'bg-primary text-white';
-                case 'Đã giao': return 'bg-success text-white';
-                case 'Đã hủy': return 'bg-danger text-white';
-                default: return 'bg-secondary text-white';
-            }
-        }
-
-        // ================= XỬ LÝ QUYỀN VÀ TRẠNG THÁI ĐƠN HÀNG =================
-        function updateOrderStatus(orderId, newStatus) {
-            // Kiểm tra phân quyền: Chỉ Admin mới có quyền cập nhật
-            if (!state.currentUser || state.currentUser.role !== 'admin') {
-                showAlert('Chỉ tài khoản Quản trị viên (Admin) mới có quyền chỉnh sửa trạng thái đơn hàng!', 'danger');
-                return;
-            }
-
-            const ord = state.orders.find(o => o.id === parseInt(orderId));
-            if (ord) {
-                const oldStatus = ord.status;
-                ord.status = newStatus;
-                saveData();
-                showAlert(`Đã cập nhật trạng thái đơn <strong>#${orderId}</strong> từ "<em>${oldStatus}</em>" thành "<strong class="text-uppercase">${newStatus}</strong>" thành công!`, 'success');
-                render();
-            } else {
-                showAlert('Không tìm thấy đơn hàng cần sửa!', 'danger');
-            }
-        }
-
-        function openEditStatusModal(orderId) {
-            if (!state.currentUser || state.currentUser.role !== 'admin') {
-                showAlert('Bạn cần quyền Quản trị viên để thực hiện thao tác này!', 'danger');
-                return;
-            }
-
-            const ord = state.orders.find(o => o.id === parseInt(orderId));
-            if (!ord) return;
-
-            document.getElementById('modalOrderIdDisplay').innerText = ord.id;
-            document.getElementById('modalOrderIdInput').value = ord.id;
-            document.getElementById('modalStatusSelect').value = ord.status;
-
-            const itemsHtml = ord.items.map(i => `• ${i.name} (x${i.qty}): ${formatMoney(i.price * i.qty)}`).join('<br>');
-            document.getElementById('modalOrderDetails').innerHTML = `
-                <div><strong>Khách hàng:</strong> ${ord.customer} - ${ord.phone}</div>
-                <div><strong>Địa chỉ:</strong> ${ord.address}</div>
-                <div><strong>Tổng thanh toán:</strong> <span class="text-danger fw-bold">${formatMoney(ord.total)}</span></div>
-                <div class="mt-2 text-muted"><strong>Sản phẩm:</strong><br>${itemsHtml}</div>
-            `;
-
-            const modal = new bootstrap.Modal(document.getElementById('orderStatusModal'));
-            modal.show();
-        }
-
-        function handleStatusFormSubmit(e) {
-            e.preventDefault();
-            const orderId = document.getElementById('modalOrderIdInput').value;
-            const newStatus = document.getElementById('modalStatusSelect').value;
-
-            updateOrderStatus(orderId, newStatus);
-
-            const modalEl = document.getElementById('orderStatusModal');
-            const modal = bootstrap.Modal.getInstance(modalEl);
-            if (modal) modal.hide();
         }
 
         function navTo(page, param = null) {
@@ -400,7 +756,7 @@
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end shadow">
                             ${state.currentUser.role === 'admin' ? `
-                                <li><a class="dropdown-item fw-bold text-primary cursor-pointer" onclick="navTo('admin-dashboard')"><i class="bi bi-speedometer2 me-2"></i>Trang Quản trị Admin</a></li>
+                                <li><a class="dropdown-item fw-bold text-primary cursor-pointer" onclick="navTo('admin-dashboard')"><i class="bi bi-speedometer2 me-2"></i>Trang Admin</a></li>
                                 <li><hr class="dropdown-divider"></li>
                             ` : ''}
                             <li><a class="dropdown-item cursor-pointer" onclick="navTo('orders')"><i class="bi bi-box-seam me-2"></i>Đơn mua của tôi</a></li>
@@ -542,6 +898,16 @@
             }
         }
 
+        function updateOrderStatus(orderId, newStatus) {
+            const ord = state.orders.find(o => o.id === orderId);
+            if (ord) {
+                ord.status = newStatus;
+                saveData();
+                showAlert(`Đã cập nhật đơn #${orderId} sang trạng thái: "${newStatus}"`);
+                render();
+            }
+        }
+
         // RENDER TỔNG THỂ SPA
         function render() {
             const app = document.getElementById('appView');
@@ -575,6 +941,7 @@
 
                     <div class="container my-5">
                         <div class="row">
+                            <!-- BỘ LỌC BÊN TRÁI -->
                             <div class="col-lg-3 mb-4">
                                 <div class="card border-0 shadow-sm p-3 sticky-top" style="top: 80px;">
                                     <h5 class="fw-bold mb-3"><i class="bi bi-funnel"></i> Bộ lọc sản phẩm</h5>
@@ -626,6 +993,7 @@
                                 </div>
                             </div>
 
+                            <!-- LƯỚI SẢN PHẨM -->
                             <div class="col-lg-9">
                                 <div class="d-flex justify-content-between align-items-center mb-3">
                                     <h5 class="fw-bold mb-0">Sản phẩm (<span class="text-primary">${list.length}</span> mẫu)</h5>
@@ -859,7 +1227,7 @@
                 `;
             }
 
-            // 6. LỊCH SỬ ĐƠN HÀNG (DÀNH CHO KHÁCH XEM)
+            // 6. LỊCH SỬ ĐƠN HÀNG
             else if (state.currentPage === 'orders') {
                 const myOrders = (state.currentUser && state.currentUser.role !== 'admin')
                     ? state.orders.filter(o => o.email === state.currentUser.email || o.customer === state.currentUser.fullname)
@@ -867,14 +1235,7 @@
 
                 app.innerHTML = `
                     <div class="container my-5">
-                        <div class="d-flex justify-content-between align-items-center mb-4">
-                            <h4 class="fw-bold mb-0"><i class="bi bi-box-seam me-2 text-warning"></i> Lịch sử đơn đặt mua</h4>
-                            ${state.currentUser && state.currentUser.role === 'admin' ? `
-                                <button class="btn btn-outline-primary btn-sm" onclick="navTo('admin-dashboard')">
-                                    <i class="bi bi-arrow-right-circle me-1"></i>Về Trang Quản trị Admin
-                                </button>
-                            ` : ''}
-                        </div>
+                        <h4 class="fw-bold mb-4"><i class="bi bi-box-seam"></i> Lịch sử đơn đặt mua</h4>
                         <div class="card border-0 shadow-sm">
                             <div class="table-responsive">
                                 <table class="table align-middle mb-0">
@@ -883,7 +1244,6 @@
                                             <th>Mã đơn</th>
                                             <th>Thời gian đặt</th>
                                             <th>Khách nhận</th>
-                                            <th>Chi tiết sản phẩm</th>
                                             <th>Tổng tiền</th>
                                             <th>Trạng thái</th>
                                         </tr>
@@ -891,19 +1251,14 @@
                                     <tbody>
                                         ${myOrders.length > 0 ? myOrders.map(o => `
                                             <tr>
-                                                <td class="fw-bold text-primary">#${o.id}</td>
-                                                <td><small class="text-muted">${o.createdAt}</small></td>
-                                                <td><strong>${o.customer}</strong><br><small class="text-secondary">${o.phone}</small></td>
-                                                <td>
-                                                    <ul class="list-unstyled mb-0 small">
-                                                        ${o.items.map(it => `<li>- ${it.name} <span class="badge bg-light text-dark border">x${it.qty}</span></li>`).join('')}
-                                                    </ul>
-                                                </td>
+                                                <td class="fw-bold">#${o.id}</td>
+                                                <td>${o.createdAt}</td>
+                                                <td>${o.customer}</td>
                                                 <td class="fw-bold text-danger">${formatMoney(o.total)}</td>
-                                                <td><span class="badge status-badge ${getStatusBadgeClass(o.status)}">${o.status}</span></td>
+                                                <td><span class="badge bg-info text-dark">${o.status}</span></td>
                                             </tr>
                                         `).join('') : `
-                                            <tr><td colspan="6" class="text-center py-4 text-muted">Chưa có đơn hàng nào!</td></tr>
+                                            <tr><td colspan="5" class="text-center py-4 text-muted">Chưa có đơn hàng nào!</td></tr>
                                         `}
                                     </tbody>
                                 </table>
@@ -975,28 +1330,26 @@
                 `;
             }
 
-            // 8. TRANG ADMIN QUẢN TRỊ & CHỈNH SỬA TRẠNG THÁI ĐƠN HÀNG
+            // 8. TRANG ADMIN
             else if (state.currentPage === 'admin-dashboard') {
-                const totalRevenue = state.orders.reduce((s, o) => s + (o.status !== 'Đã hủy' ? o.total : 0), 0);
+                const totalRevenue = state.orders.reduce((s, o) => s + o.total, 0);
 
                 app.innerHTML = `
                     <div class="container my-4">
-                        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
                             <div>
-                                <h3 class="fw-bold mb-0"><i class="bi bi-speedometer2 text-primary me-2"></i>Trung Tâm Quản Trị Hệ Thống</h3>
-                                <small class="text-muted">Quản trị viên: <strong>${state.currentUser.fullname}</strong> (${state.currentUser.email})</small>
+                                <h3 class="fw-bold mb-0"><i class="bi bi-speedometer2"></i> Trung tâm Quản trị Admin</h3>
+                                <small class="text-muted">Quản trị: <strong>${state.currentUser.fullname}</strong> (${state.currentUser.email})</small>
                             </div>
-                            <div class="d-flex gap-2">
-                                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addProductModal">
-                                    <i class="bi bi-plus-circle me-1"></i> Thêm kính mới
-                                </button>
-                            </div>
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addProductModal">
+                                <i class="bi bi-plus-circle me-1"></i> Thêm kính mắt mới
+                            </button>
                         </div>
 
                         <div class="row g-3 mb-4">
                             <div class="col-md-3">
                                 <div class="card border-0 shadow-sm bg-primary text-white p-3">
-                                    <h6 class="small text-uppercase">DOANH THU THỰC TẾ</h6>
+                                    <h6 class="small text-uppercase">TỔNG DOANH THU</h6>
                                     <h4 class="fw-bold mb-0">${formatMoney(totalRevenue)}</h4>
                                 </div>
                             </div>
@@ -1020,59 +1373,6 @@
                             </div>
                         </div>
 
-                        <!-- KHU VỰC QUẢN LÝ ĐƠN HÀNG (ADMIN CÓ TOÀN QUYỀN CHỈNH SỬA) -->
-                        <div class="card border-0 shadow-sm mb-4 border-top border-4 border-warning">
-                            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-                                <h5 class="fw-bold mb-0"><i class="bi bi-card-checklist me-2 text-warning"></i>Quản lý trạng thái đơn hàng</h5>
-                                <span class="badge bg-danger">Quyền riêng: Admin</span>
-                            </div>
-                            <div class="table-responsive">
-                                <table class="table align-middle mb-0">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th>Mã</th>
-                                            <th>Khách hàng</th>
-                                            <th>Địa chỉ nhận hàng</th>
-                                            <th>Tổng tiền</th>
-                                            <th>Trạng thái hiện tại</th>
-                                            <th style="min-width: 220px;">Đổi trạng thái nhanh</th>
-                                            <th>Chi tiết</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        ${state.orders.map(o => `
-                                            <tr>
-                                                <td class="fw-bold text-primary">#${o.id}</td>
-                                                <td>
-                                                    <strong>${o.customer}</strong><br>
-                                                    <small class="text-muted"><i class="bi bi-telephone"></i> ${o.phone}</small>
-                                                </td>
-                                                <td><small class="text-secondary">${o.address}</small></td>
-                                                <td class="fw-bold text-danger">${formatMoney(o.total)}</td>
-                                                <td>
-                                                    <span class="badge status-badge ${getStatusBadgeClass(o.status)}">${o.status}</span>
-                                                </td>
-                                                <td>
-                                                    <!-- Dropdown cập nhật trạng thái trực tiếp của Admin -->
-                                                    <select class="form-select form-select-sm" onchange="updateOrderStatus(${o.id}, this.value)">
-                                                        ${['Chờ xác nhận', 'Đã xác nhận', 'Đang chuẩn bị', 'Đang giao', 'Đã giao', 'Đã hủy'].map(st => `
-                                                            <option value="${st}" ${o.status===st ? 'selected' : ''}>${st}</option>
-                                                        `).join('')}
-                                                    </select>
-                                                </td>
-                                                <td>
-                                                    <button class="btn btn-sm btn-outline-secondary" onclick="openEditStatusModal(${o.id})" title="Chỉnh sửa chi tiết">
-                                                        <i class="bi bi-sliders"></i> Sửa
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        `).join('')}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        <!-- QUẢN LÝ KHO SẢN PHẨM -->
                         <div class="card border-0 shadow-sm mb-4">
                             <div class="card-header bg-white py-3 fw-bold">Danh sách kho (${state.products.length} sản phẩm)</div>
                             <div class="table-responsive">
@@ -1106,9 +1406,43 @@
                                 </table>
                             </div>
                         </div>
+
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-header bg-white py-3 fw-bold">Quản lý đơn hàng</div>
+                            <div class="table-responsive">
+                                <table class="table align-middle mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Mã đơn</th>
+                                            <th>Người nhận</th>
+                                            <th>Địa chỉ nhận</th>
+                                            <th>Tổng tiền</th>
+                                            <th>Trạng thái</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${state.orders.map(o => `
+                                            <tr>
+                                                <td class="fw-bold">#${o.id}</td>
+                                                <td>${o.customer}<br><small class="text-muted">${o.phone}</small></td>
+                                                <td><small>${o.address}</small></td>
+                                                <td class="fw-bold text-danger">${formatMoney(o.total)}</td>
+                                                <td>
+                                                    <select class="form-select form-select-sm" style="width: 170px;" onchange="updateOrderStatus(${o.id}, this.value)">
+                                                        ${['Chờ xác nhận', 'Đã xác nhận', 'Đang chuẩn bị', 'Đang giao', 'Đã giao', 'Đã hủy'].map(st => `
+                                                            <option value="${st}" ${o.status===st?'selected':''}>${st}</option>
+                                                        `).join('')}
+                                                    </select>
+                                                </td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
 
-                    <!-- Modal Thêm Sản Phẩm Mới -->
+                    <!-- Modal Thêm Sản Phẩm -->
                     <div class="modal fade" id="addProductModal" tabindex="-1">
                         <div class="modal-dialog modal-lg">
                             <div class="modal-content">
